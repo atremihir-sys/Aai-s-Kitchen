@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Aai's Kitchen</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif;-webkit-tap-highlight-color:transparent;}
+body{background:radial-gradient(circle at top,#0f0f1a,#050509);color:white;min-height:100vh;}
+.blob{position:fixed;width:400px;height:400px;background:radial-gradient(circle,#ff00cc,transparent);filter:blur(120px);opacity:0.12;z-index:0;pointer-events:none;top:-100px;left:-100px;}
+.blob2{right:-100px;left:auto;top:auto;bottom:-100px;background:radial-gradient(circle,#3333ff,transparent);}
+
+.screen{display:none;min-height:100vh;flex-direction:column;position:relative;z-index:1;}
+.screen.active{display:flex;}
+
+.topbar{background:rgba(255,255,255,0.04);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.08);padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;}
+.topbar-back{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:0.2s;}
+.topbar-back:hover{background:rgba(255,0,204,0.2);border-color:#ff00cc;}
+.topbar-title{font-size:16px;font-weight:600;background:linear-gradient(90deg,#ff00cc,#3333ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.topbar-sub{font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px;}
+
+.progress-wrap{height:2px;background:rgba(255,255,255,0.08);}
+.progress-bar{height:2px;background:linear-gradient(90deg,#ff00cc,#3333ff);transition:width 0.4s ease;}
+
+.scroll-body{flex:1;overflow-y:auto;padding:20px 16px 120px;}
+.footer-action{position:sticky;bottom:0;background:rgba(5,5,9,0.95);backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,0.08);padding:14px 16px;}
+
+.btn-primary{width:100%;padding:15px;background:linear-gradient(90deg,#ff00cc,#3333ff);color:white;border:none;border-radius:30px;font-family:'Poppins',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:0.3s;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 0 20px rgba(255,0,204,0.25);}
+.btn-primary:hover{transform:scale(1.02);box-shadow:0 0 30px #ff00cc;}
+.btn-primary:active{transform:scale(0.98);}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-secondary{width:100%;padding:13px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.8);border:1px solid rgba(255,255,255,0.15);border-radius:30px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:0.2s;margin-top:10px;}
+.btn-secondary:hover{background:rgba(255,0,204,0.1);border-color:rgba(255,0,204,0.3);}
+
+/* FIELD */
+.field{margin-bottom:18px;}
+.field label{display:block;font-size:11px;font-weight:600;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:7px;}
+.field input,.field textarea,.field select{width:100%;padding:13px 15px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;font-family:'Poppins',sans-serif;font-size:14px;color:white;transition:0.2s;}
+.field textarea{min-height:70px;resize:vertical;}
+.field input::placeholder,.field textarea::placeholder{color:rgba(255,255,255,0.25);}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:#ff00cc;background:rgba(255,0,204,0.08);box-shadow:0 0 0 3px rgba(255,0,204,0.12);}
+.field input.err{border-color:#ff4444;}
+.err-msg{font-size:12px;color:#ff6b6b;margin-top:5px;display:none;}
+.err-msg.show{display:block;}
+.req{color:#ff00cc;}
+.field select option{background:#0f0f1a;color:white;}
+
+/* LOGIN */
+.hero{text-align:center;padding:60px 20px 36px;}
+.hero-emoji{font-size:56px;display:block;margin-bottom:14px;animation:float 3s ease-in-out infinite;}
+.hero h1{font-size:2.6rem;font-weight:700;background:linear-gradient(90deg,#ff00cc,#3333ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero p{margin-top:8px;opacity:0.55;font-size:14px;font-weight:300;}
+.login-body{padding:20px 20px 100px;}
+.welcome-back{border-radius:16px;padding:16px;background:rgba(255,0,204,0.08);border:1px solid rgba(255,0,204,0.25);margin-bottom:20px;display:none;align-items:center;gap:12px;}
+.welcome-back.show{display:flex;}
+.wb-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#ff00cc,#3333ff);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0;}
+.wb-name{font-size:15px;font-weight:600;}
+.wb-sub{font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px;}
+.wb-change{font-size:12px;color:#ff00cc;cursor:pointer;text-decoration:underline;margin-top:4px;}
+
+/* CATEGORY */
+.greeting{font-size:22px;font-weight:700;margin-bottom:4px;background:linear-gradient(90deg,#ff00cc,#3333ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.greeting-sub{font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:24px;}
+.cat-grid{display:flex;flex-direction:column;gap:14px;}
+.cat-card{border-radius:18px;padding:20px 18px;cursor:pointer;transition:transform 0.15s;position:relative;border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:16px;animation:float 4s ease-in-out infinite;}
+.cat-card:nth-child(2){animation-delay:0.5s;}
+.cat-card:nth-child(3){animation-delay:1s;}
+.cat-card::before{content:"";position:absolute;inset:-1px;border-radius:18px;z-index:-1;filter:blur(10px);opacity:0;transition:0.3s;}
+.cat-card:hover::before{opacity:0.5;}
+.cat-card:active{transform:scale(0.97);}
+.cat-diwali{background:rgba(255,102,0,0.1);}
+.cat-diwali::before{background:linear-gradient(45deg,#ff6600,#ffcc00);}
+.cat-daily{background:rgba(0,255,136,0.08);}
+.cat-daily::before{background:linear-gradient(45deg,#00ff88,#0088ff);}
+.cat-festival{background:rgba(255,0,204,0.1);}
+.cat-festival::before{background:linear-gradient(45deg,#ff00cc,#9900ff);}
+.cat-icon-wrap{width:54px;height:54px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;}
+.cat-diwali .cat-icon-wrap{background:rgba(255,102,0,0.2);border:1px solid rgba(255,102,0,0.3);}
+.cat-daily .cat-icon-wrap{background:rgba(0,255,136,0.15);border:1px solid rgba(0,255,136,0.25);}
+.cat-festival .cat-icon-wrap{background:rgba(255,0,204,0.15);border:1px solid rgba(255,0,204,0.25);}
+.cat-name{font-size:16px;font-weight:600;}
+.cat-diwali .cat-name{color:#ffaa44;}
+.cat-daily .cat-name{color:#44ffaa;}
+.cat-festival .cat-name{color:#ff66cc;}
+.cat-desc{font-size:12px;color:rgba(255,255,255,0.45);line-height:1.5;}
+.cat-items{font-size:11px;color:rgba(255,255,255,0.25);margin-top:4px;}
+.cat-arrow{font-size:20px;color:rgba(255,255,255,0.2);margin-left:auto;}
+
+/* CART BADGE on category screen */
+.cart-indicator{background:rgba(255,0,204,0.1);border:1px solid rgba(255,0,204,0.25);border-radius:12px;padding:12px 16px;margin-bottom:20px;display:none;}
+.cart-indicator.show{display:block;}
+.ci-title{font-size:11px;color:#ff66cc;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;}
+.ci-item{font-size:13px;color:rgba(255,255,255,0.7);padding:3px 0;}
+
+/* PRODUCTS */
+.prod-cat-header{border-radius:14px;padding:16px;margin-bottom:18px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:12px;}
+.product-card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:16px;margin-bottom:10px;overflow:hidden;transition:0.2s;}
+.product-card.selected{border-color:#ff00cc;box-shadow:0 0 16px rgba(255,0,204,0.15);}
+.product-top{padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+.prod-emoji{font-size:22px;width:34px;text-align:center;flex-shrink:0;}
+.prod-name{font-size:14px;font-weight:600;}
+.prod-price{font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px;}
+.prod-check{width:22px;height:22px;border-radius:6px;border:1.5px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:0.2s;background:rgba(255,255,255,0.04);}
+.product-card.selected .prod-check{background:linear-gradient(135deg,#ff00cc,#3333ff);border-color:transparent;}
+.prod-check-icon{opacity:0;transition:0.15s;color:white;font-size:13px;font-weight:700;}
+.product-card.selected .prod-check-icon{opacity:1;}
+.qty-section{display:none;padding:12px 16px 14px;background:rgba(255,0,204,0.06);border-top:1px solid rgba(255,0,204,0.12);align-items:center;gap:10px;}
+.product-card.selected .qty-section{display:flex;}
+.qty-stepper{display:flex;align-items:center;border:1px solid rgba(255,0,204,0.3);border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.04);margin-left:auto;}
+.qty-btn{width:36px;height:36px;border:none;background:none;font-size:18px;color:#ff66cc;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:0.15s;font-weight:300;}
+.qty-btn:hover{background:rgba(255,0,204,0.1);}
+.qty-val{width:48px;height:36px;border:none;border-left:1px solid rgba(255,0,204,0.3);border-right:1px solid rgba(255,0,204,0.3);text-align:center;font-family:'Poppins',sans-serif;font-size:14px;font-weight:600;color:white;background:transparent;-moz-appearance:textfield;}
+.qty-val::-webkit-outer-spin-button,.qty-val::-webkit-inner-spin-button{-webkit-appearance:none;}
+.qty-val:focus{outline:none;}
+.qty-unit{font-size:12px;color:rgba(255,255,255,0.35);}
+.cart-strip{background:linear-gradient(90deg,rgba(255,0,204,0.12),rgba(51,51,255,0.12));border:1px solid rgba(255,0,204,0.2);border-radius:12px;padding:12px 16px;margin-top:14px;display:none;align-items:center;font-size:14px;font-weight:600;}
+.cart-strip.show{display:flex;}
+.cart-strip-right{margin-left:auto;font-size:15px;font-weight:700;color:#ff66cc;}
+
+/* DAILY DURATION */
+.duration-box{background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.2);border-radius:14px;padding:16px;margin-bottom:16px;}
+.duration-title{font-size:12px;color:#44ffaa;font-weight:600;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;}
+.date-row{display:flex;gap:10px;}
+.date-row .field{flex:1;margin-bottom:0;}
+.duration-summary{background:rgba(255,255,255,0.04);border-radius:10px;padding:10px 14px;margin-top:12px;font-size:13px;color:rgba(255,255,255,0.65);display:none;}
+.skip-title{font-size:12px;color:rgba(255,255,255,0.4);margin:14px 0 8px;}
+.chip-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+.date-chip{padding:7px 12px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.65);transition:0.15s;}
+.date-chip.excluded{background:rgba(255,0,204,0.12);border-color:#ff00cc;color:#ff66cc;text-decoration:line-through;}
+
+/* DELIVERY */
+.delivery-opts{display:flex;gap:12px;margin-bottom:18px;}
+.delivery-opt{flex:1;padding:14px 10px;border:1px solid rgba(255,255,255,0.1);border-radius:14px;cursor:pointer;text-align:center;background:rgba(255,255,255,0.04);transition:0.2s;}
+.delivery-opt.active{border-color:#ff00cc;background:rgba(255,0,204,0.1);box-shadow:0 0 14px rgba(255,0,204,0.15);}
+.delivery-opt-icon{font-size:24px;display:block;margin-bottom:5px;}
+.delivery-opt-name{font-size:13px;font-weight:600;color:rgba(255,255,255,0.8);}
+.delivery-opt-sub{font-size:11px;color:rgba(255,255,255,0.3);margin-top:2px;}
+.delivery-opt.active .delivery-opt-name{color:#ff66cc;}
+#address-wrap{max-height:0;overflow:hidden;transition:max-height 0.35s,opacity 0.3s;opacity:0;}
+#address-wrap.show{max-height:300px;opacity:1;}
+
+/* BILL PAGE */
+.bill-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:18px;overflow:hidden;margin-bottom:14px;position:relative;}
+.bill-card::before{content:"";position:absolute;inset:-1px;border-radius:18px;background:linear-gradient(45deg,#ff00cc,#3333ff);z-index:-1;filter:blur(12px);opacity:0.25;}
+.bill-header{background:linear-gradient(135deg,rgba(255,0,204,0.15),rgba(51,51,255,0.15));border-bottom:1px solid rgba(255,255,255,0.07);padding:18px 20px;text-align:center;}
+.bill-header h2{font-size:18px;font-weight:700;background:linear-gradient(90deg,#ff00cc,#3333ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.bill-header p{font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px;}
+.bill-body{padding:18px 20px;}
+.bill-section-title{font-size:10px;font-weight:600;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;}
+.bill-cust{background:rgba(255,255,255,0.04);border-radius:10px;padding:12px 14px;margin-bottom:18px;}
+.bill-cust-name{font-size:15px;font-weight:600;}
+.bill-cust-info{font-size:12px;color:rgba(255,255,255,0.4);margin-top:3px;line-height:1.6;}
+.bill-group{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;margin-bottom:10px;overflow:hidden;}
+.bill-group-header{padding:10px 14px;background:rgba(255,255,255,0.04);border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;}
+.bill-group-cat{font-size:12px;font-weight:600;color:rgba(255,255,255,0.6);}
+.bill-group-dates{font-size:11px;color:rgba(255,255,255,0.3);}
+.bill-item-row{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.04);}
+.bill-item-row:last-child{border-bottom:none;}
+.bill-item-left{flex:1;}
+.bill-item-name{font-size:14px;font-weight:500;}
+.bill-item-qty{font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px;}
+.bill-item-price{font-size:14px;font-weight:600;color:#ff66cc;margin-right:8px;}
+.edit-btn{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.5);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:0.2s;}
+.edit-btn:hover{background:rgba(255,0,204,0.15);border-color:#ff00cc;color:#ff00cc;}
+.bill-divider{height:1px;background:rgba(255,255,255,0.07);margin:12px 0;}
+.bill-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;color:rgba(255,255,255,0.45);}
+.bill-delivery-row{color:#ffaa44;}
+.bill-total{display:flex;justify-content:space-between;font-size:18px;font-weight:700;padding:12px 0 4px;border-top:1px solid rgba(255,255,255,0.1);margin-top:8px;}
+.bill-total span:last-child{background:linear-gradient(90deg,#ff00cc,#3333ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.bill-upi-note{background:rgba(255,170,0,0.08);border:1px solid rgba(255,170,0,0.18);border-radius:10px;padding:11px 13px;font-size:12px;color:rgba(255,200,100,0.75);margin-top:14px;line-height:1.6;}
+
+/* SUCCESS */
+.success-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center;}
+.success-ring{width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,#ff00cc,#3333ff);display:flex;align-items:center;justify-content:center;font-size:38px;margin-bottom:22px;animation:pop 0.5s cubic-bezier(0.175,0.885,0.32,1.275) both;box-shadow:0 0 40px rgba(255,0,204,0.35);}
+.success-h{font-size:24px;font-weight:700;background:linear-gradient(90deg,#ff00cc,#3333ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px;}
+.success-p{font-size:14px;color:rgba(255,255,255,0.45);line-height:1.7;max-width:280px;margin-bottom:20px;}
+.order-badge{background:linear-gradient(90deg,#ff00cc,#3333ff);color:white;font-size:14px;font-weight:600;padding:10px 26px;border-radius:30px;margin-bottom:24px;display:inline-block;}
+
+/* FIX #9: Loading state for products */
+.products-loading{text-align:center;padding:40px 20px;color:rgba(255,255,255,0.35);font-size:14px;}
+.products-error{background:rgba(255,0,0,0.08);border:1px solid rgba(255,80,80,0.2);border-radius:12px;padding:14px;font-size:13px;color:#ff8888;text-align:center;margin-bottom:12px;}
+
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;display:none;}
+.btn-primary.loading .spinner{display:block;}
+.btn-primary.loading .btn-txt{opacity:0.7;}
+
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+@keyframes pop{from{transform:scale(0.4);opacity:0;}to{transform:scale(1);opacity:1;}}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="blob"></div>
+<div class="blob blob2"></div>
+
+<!-- SCREEN 1: LOGIN -->
+<div class="screen active" id="screen-login">
+  <div class="hero">
+    <span class="hero-emoji">🍱</span>
+    <h1>Aai's Kitchen</h1>
+    <p>Homemade food made with love</p>
+  </div>
+  <div class="login-body">
+    <div class="welcome-back" id="wb-banner">
+      <div class="wb-avatar" id="wb-avatar">A</div>
+      <div>
+        <div class="wb-name" id="wb-name">Welcome back!</div>
+        <div class="wb-sub" id="wb-sub">Tap Continue to order</div>
+        <div class="wb-change" onclick="clearSaved()">Not you? Change</div>
+      </div>
+    </div>
+    <div id="new-user-form">
+      <div class="field">
+        <label>Your Name <span class="req">*</span></label>
+        <input type="text" id="inp-name" placeholder="Enter your full name" autocomplete="name"/>
+        <div class="err-msg" id="err-name">Please enter your name</div>
+      </div>
+      <div class="field">
+        <label>WhatsApp Number <span class="req">*</span></label>
+        <input type="tel" id="inp-phone" placeholder="10 digit number" maxlength="10" autocomplete="tel"/>
+        <div class="err-msg" id="err-phone">Please enter a valid 10 digit number</div>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="loginContinue()"><span class="btn-txt">Continue</span></button>
+    <p style="text-align:center;font-size:12px;color:rgba(255,255,255,0.25);margin-top:16px;line-height:1.6;">Your details are saved on this device for next time.</p>
+  </div>
+</div>
+
+<!-- SCREEN 2: CATEGORY -->
+<div class="screen" id="screen-category">
+  <div class="topbar">
+    <button class="topbar-back" onclick="catBack()">←</button>
+    <div>
+      <div class="topbar-title">Aai's Kitchen</div>
+      <div class="topbar-sub">Choose what you want</div>
+    </div>
+  </div>
+  <div class="progress-wrap"><div class="progress-bar" style="width:20%"></div></div>
+  <div class="scroll-body">
+    <div class="greeting" id="cat-greeting">Hello!</div>
+    <div class="greeting-sub">Select a category to start ordering</div>
+    <div class="cart-indicator" id="cart-indicator">
+      <div class="ci-title">Items in cart so far</div>
+      <div id="cart-indicator-items"></div>
+    </div>
+    <div class="cat-grid">
+      <div class="cat-card cat-diwali" onclick="selectCat('diwali')">
+        <div class="cat-icon-wrap">🪔</div>
+        <div style="flex:1">
+          <div class="cat-name">Diwali Orders</div>
+          <div class="cat-desc">Traditional Diwali faral and snacks</div>
+          <div class="cat-items" id="cat-items-diwali">Chakli · Chivda · Shev · Anarse</div>
+        </div>
+        <div class="cat-arrow">›</div>
+      </div>
+      <div class="cat-card cat-daily" onclick="selectCat('daily')">
+        <div class="cat-icon-wrap">🍽</div>
+        <div style="flex:1">
+          <div class="cat-name">Daily Food Orders</div>
+          <div class="cat-desc">Fresh home-cooked daily meals</div>
+          <div class="cat-items" id="cat-items-daily">Chapati · Sabji · Rice · Dal · Koshimbir</div>
+        </div>
+        <div class="cat-arrow">›</div>
+      </div>
+      <div class="cat-card cat-festival" onclick="selectCat('festival')">
+        <div class="cat-icon-wrap">🌸</div>
+        <div style="flex:1">
+          <div class="cat-name">Festival / Special Orders</div>
+          <div class="cat-desc">Special occasion sweets</div>
+          <div class="cat-items" id="cat-items-festival">Modak · Puran Poli · Gul Poli</div>
+        </div>
+        <div class="cat-arrow">›</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer-action" id="cat-footer" style="display:none">
+    <button class="btn-primary" onclick="goToDelivery()"><span class="btn-txt">Delivery Details →</span></button>
+  </div>
+</div>
+
+<!-- SCREEN 3: PRODUCTS -->
+<div class="screen" id="screen-products">
+  <div class="topbar">
+    <button class="topbar-back" onclick="goTo('screen-category')">←</button>
+    <div>
+      <div class="topbar-title" id="prod-title">Select Items</div>
+      <div class="topbar-sub">Tap item to select, set quantity</div>
+    </div>
+  </div>
+  <div class="progress-wrap"><div class="progress-bar" style="width:45%"></div></div>
+  <div class="scroll-body">
+    <div class="prod-cat-header" id="prod-header">
+      <div style="font-size:34px" id="prod-icon">🪔</div>
+      <div>
+        <div style="font-size:18px;font-weight:700" id="prod-hname">Diwali</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:2px" id="prod-hsub"></div>
+      </div>
+    </div>
+    <div id="daily-duration-box" style="display:none">
+      <div class="duration-box">
+        <div class="duration-title">Delivery Duration</div>
+        <div class="date-row">
+          <div class="field">
+            <label>Start Date <span class="req">*</span></label>
+            <input type="date" id="inp-start"/>
+            <div class="err-msg" id="err-start">Required</div>
+          </div>
+          <div class="field">
+            <label>End Date <span class="req">*</span></label>
+            <input type="date" id="inp-end"/>
+            <div class="err-msg" id="err-end">Required</div>
+          </div>
+        </div>
+        <div class="duration-summary" id="dur-summary"></div>
+        <div id="skip-wrap" style="display:none">
+          <div class="skip-title">Tap days to skip (optional)</div>
+          <div class="chip-wrap" id="chip-wrap"></div>
+          <div id="skip-summary" style="font-size:12px;color:#ff9966;margin-bottom:6px;display:none;"></div>
+        </div>
+      </div>
+    </div>
+    <div id="single-date-box" style="display:none">
+      <div class="field">
+        <label>Delivery Date <span class="req">*</span></label>
+        <input type="date" id="inp-single-date"/>
+        <div class="err-msg" id="err-single-date">Please select a date</div>
+      </div>
+    </div>
+    <div id="product-list"><div class="products-loading">Loading menu...</div></div>
+    <div class="cart-strip" id="cart-strip">
+      <span id="strip-items">0 items</span>
+      <span class="cart-strip-right" id="strip-amt">Rs.0</span>
+    </div>
+    <div class="err-msg" id="err-products" style="margin-top:8px;font-size:13px;">Please select at least one item</div>
+  </div>
+  <div class="footer-action">
+    <button class="btn-primary" onclick="addBatchToCart()"><span class="btn-txt">Add to Order →</span></button>
+  </div>
+</div>
+
+<!-- SCREEN 4: DELIVERY -->
+<div class="screen" id="screen-delivery">
+  <div class="topbar">
+    <button class="topbar-back" onclick="goTo('screen-category')">←</button>
+    <div>
+      <div class="topbar-title">Delivery Details</div>
+      <div class="topbar-sub">How to receive your order?</div>
+    </div>
+  </div>
+  <div class="progress-wrap"><div class="progress-bar" style="width:72%"></div></div>
+  <div class="scroll-body">
+    <div class="field">
+      <label>Delivery Type <span class="req">*</span></label>
+      <div class="delivery-opts">
+        <div class="delivery-opt active" id="opt-home" onclick="setDelivery('home')">
+          <span class="delivery-opt-icon">🏠</span>
+          <div class="delivery-opt-name">Home Delivery</div>
+          <div class="delivery-opt-sub">+Rs.30 Diwali/Festival</div>
+        </div>
+        <div class="delivery-opt" id="opt-pickup" onclick="setDelivery('pickup')">
+          <span class="delivery-opt-icon">🛍</span>
+          <div class="delivery-opt-name">Pickup</div>
+          <div class="delivery-opt-sub">No extra charge</div>
+        </div>
+      </div>
+    </div>
+    <div id="address-wrap" class="show">
+      <div class="field">
+        <label>Full Address <span class="req">*</span></label>
+        <textarea id="inp-address" placeholder="House no., Building, Street..."></textarea>
+        <div class="err-msg" id="err-address">Please enter your address</div>
+      </div>
+      <div class="field">
+        <label>Landmark (optional)</label>
+        <input type="text" id="inp-landmark" placeholder="Near temple, school, etc."/>
+      </div>
+    </div>
+    <div class="field">
+      <label>Special Instructions (optional)</label>
+      <input type="text" id="inp-note" placeholder="Any special requests..."/>
+    </div>
+  </div>
+  <div class="footer-action">
+    <button class="btn-primary" onclick="goToBill()"><span class="btn-txt">Review Bill →</span></button>
+  </div>
+</div>
+
+<!-- SCREEN 5: BILL -->
+<div class="screen" id="screen-bill">
+  <div class="topbar">
+    <button class="topbar-back" onclick="goTo('screen-delivery')">←</button>
+    <div>
+      <div class="topbar-title">Review Your Order</div>
+      <div class="topbar-sub">Check before confirming</div>
+    </div>
+  </div>
+  <div class="progress-wrap"><div class="progress-bar" style="width:90%"></div></div>
+  <div class="scroll-body">
+    <div class="bill-card">
+      <div class="bill-header">
+        <h2>🍱 Aai's Kitchen</h2>
+        <p id="bill-header-sub">Order Summary</p>
+      </div>
+      <div class="bill-body">
+        <div class="bill-section-title">Customer</div>
+        <div class="bill-cust">
+          <div class="bill-cust-name" id="bill-cname"></div>
+          <div class="bill-cust-info" id="bill-cinfo"></div>
+        </div>
+        <div class="bill-section-title">Items Ordered</div>
+        <div id="bill-items-container"></div>
+        <div class="bill-divider"></div>
+        <div class="bill-row"><span>Subtotal</span><span id="bill-sub">Rs.0</span></div>
+        <div class="bill-row bill-delivery-row" id="bill-drow" style="display:none">
+          <span>Delivery charge</span><span id="bill-damt">Rs.30</span>
+        </div>
+        <div class="bill-total"><span>Total</span><span id="bill-total">Rs.0</span></div>
+        <div class="bill-upi-note">Pay via Cash or UPI on delivery. You will get a WhatsApp confirmation shortly.</div>
+      </div>
+    </div>
+    <div id="err-banner" style="display:none;background:rgba(255,0,0,0.1);border:1px solid rgba(255,100,100,0.3);border-radius:12px;padding:14px;font-size:13px;color:#ff6b6b;text-align:center;margin-bottom:12px;">
+      Could not place order. Please check your connection and try again.
+    </div>
+  </div>
+  <div class="footer-action">
+    <button class="btn-primary" id="confirm-btn" onclick="confirmOrder()">
+      <div class="spinner"></div>
+      <span class="btn-txt">Confirm and Place Order</span>
+    </button>
+  </div>
+</div>
+
+<!-- SCREEN 6: SUCCESS -->
+<div class="screen" id="screen-success">
+  <div class="success-body">
+    <div class="success-ring">✓</div>
+    <div class="success-h">Order Placed!</div>
+    <p class="success-p">Your order has been received. You will get a WhatsApp confirmation shortly.</p>
+    <div class="order-badge" id="success-oid">ORD-00001</div>
+    <button class="btn-primary" style="max-width:300px" onclick="placeAnother()"><span class="btn-txt">Place Another Order</span></button>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPXGXtm0d9Bq-sAbU0xtS6gafC9xAB-kIiMRP43JP1mXtIPBphzJf5UgexL6QBtIQL/exec";
+
+// ── FIX #9: CATALOGUE is loaded from the sheet on init ────────
+// Fallback hardcoded catalogue used while loading or if fetch fails
+var CATALOGUE = {
+  diwali: {
+    name:"Diwali Orders", icon:"🪔", deliveryCharge:30, isDaily:false,
+    products:[
+      {id:"chakli",  name:"Chakli",  emoji:"🌀", price:350, unit:"kg",    step:0.5, min:0.5, def:0.5},
+      {id:"chivda",  name:"Chivda",  emoji:"🟡", price:280, unit:"kg",    step:0.5, min:0.5, def:0.5},
+      {id:"shev",    name:"Shev",    emoji:"🟠", price:240, unit:"kg",    step:0.5, min:0.5, def:0.5},
+      {id:"anarse",  name:"Anarse",  emoji:"🍪", price:400, unit:"dozen", step:1,   min:1,   def:1  }
+    ]
+  },
+  daily: {
+    name:"Daily Food Orders", icon:"🍽", deliveryCharge:0, isDaily:true,
+    products:[
+      {id:"chapati",   name:"Chapati",   emoji:"🫓", price:4,  unit:"pieces", step:1, min:1, def:4},
+      {id:"sabji",     name:"Sabji",     emoji:"🥗", price:60, unit:"100gm",  step:1, min:1, def:1},
+      {id:"rice",      name:"Rice",      emoji:"🍚", price:30, unit:"100gm",  step:1, min:1, def:1},
+      {id:"dal",       name:"Dal",       emoji:"🍲", price:40, unit:"100gm",  step:1, min:1, def:1},
+      {id:"koshimbir", name:"Koshimbir", emoji:"🥒", price:30, unit:"100gm",  step:1, min:1, def:1}
+    ]
+  },
+  festival: {
+    name:"Festival / Special Orders", icon:"🌸", deliveryCharge:30, isDaily:false,
+    products:[
+      {id:"modak",     name:"Modak",      emoji:"🧆", price:20, unit:"pieces", step:1, min:6,  def:12},
+      {id:"puranpoli", name:"Puran Poli", emoji:"🫓", price:25, unit:"pieces", step:1, min:2,  def:4 },
+      {id:"gulpoli",   name:"Gul Poli",   emoji:"🥞", price:20, unit:"pieces", step:1, min:2,  def:4 }
+    ]
+  }
+};
+
+// Emoji map for products loaded from sheet
+var EMOJI_MAP = {
+  chapati:"🫓", sabji:"🥗", rice:"🍚", dal:"🍲", koshimbir:"🥒",
+  chakli:"🌀", chivda:"🟡", shev:"🟠", anarse:"🍪",
+  modak:"🧆", "puran poli":"🫓", "gul poli":"🥞"
+};
+
+// STATE
+var S = {
+  name:"", phone:"",
+  delivType:"Home Delivery", address:"", landmark:"", note:"",
+  currentCat: null,
+  cart: [],
+  editingBatchIndex: -1,
+};
+var excludedDates = [];
+
+// ── FIX #9: Load products from sheet ─────────────────────────
+function loadProductsFromSheet() {
+  fetch(SCRIPT_URL + "?action=getData")
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.products || !data.products.length) return;
+      // Rebuild CATALOGUE products from live sheet data
+      var catMap = {daily:[], diwali:[], festival:[]};
+      data.products.forEach(function(p) {
+        var cat = (p.category || "").toLowerCase();
+        if (!catMap[cat]) return;
+        var key = p.name.toLowerCase();
+        catMap[cat].push({
+          id:    p.name.toLowerCase().replace(/\s+/g,"-"),
+          name:  p.name,
+          emoji: EMOJI_MAP[key] || "🍽",
+          price: p.price,
+          unit:  p.unit,
+          step:  p.unit === "kg" ? 0.5 : 1,
+          min:   p.unit === "kg" ? 0.5 : (p.unit === "dozen" ? 1 : 1),
+          def:   p.unit === "kg" ? 0.5 : (p.name.toLowerCase().includes("chapati") ? 4 : 1),
+        });
+      });
+      // Only override if we actually got products
+      if (catMap.daily.length)    CATALOGUE.daily.products    = catMap.daily;
+      if (catMap.diwali.length)   CATALOGUE.diwali.products   = catMap.diwali;
+      if (catMap.festival.length) CATALOGUE.festival.products = catMap.festival;
+      // Update category item previews
+      updateCategoryPreviews();
+    })
+    .catch(function(e) {
+      console.log("Could not load live products, using defaults:", e);
+    });
+}
+
+function updateCategoryPreviews() {
+  ["diwali","daily","festival"].forEach(function(catId) {
+    var el = document.getElementById("cat-items-" + catId);
+    if (el && CATALOGUE[catId]) {
+      el.textContent = CATALOGUE[catId].products.map(function(p){return p.name;}).join(" · ");
+    }
+  });
+}
+
+// ── LOCAL STORAGE ─────────────────────────────────────────────
+function loadUser() {
+  try {
+    var u = JSON.parse(localStorage.getItem("aai_user") || "null");
+    if (!u || !u.name || !u.phone) return;
+    S.name=u.name; S.phone=u.phone; S.address=u.address||""; S.landmark=u.landmark||"";
+    document.getElementById("wb-banner").classList.add("show");
+    document.getElementById("wb-avatar").textContent = u.name.charAt(0).toUpperCase();
+    document.getElementById("wb-name").textContent = "Welcome back, " + u.name.split(" ")[0] + "!";
+    document.getElementById("wb-sub").textContent = u.phone;
+    document.getElementById("new-user-form").style.display = "none";
+  } catch(e) {}
+}
+
+function saveUser() {
+  try { localStorage.setItem("aai_user", JSON.stringify({name:S.name, phone:S.phone, address:S.address, landmark:S.landmark})); } catch(e) {}
+}
+
+function clearSaved() {
+  localStorage.removeItem("aai_user");
+  S.name=S.phone=S.address=S.landmark="";
+  document.getElementById("wb-banner").classList.remove("show");
+  document.getElementById("new-user-form").style.display="block";
+  document.getElementById("inp-name").value="";
+  document.getElementById("inp-phone").value="";
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────
+function goTo(id) {
+  document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("active");});
+  document.getElementById(id).classList.add("active");
+  window.scrollTo(0,0);
+}
+
+// ── SCREEN 1: LOGIN ───────────────────────────────────────────
+function loginContinue() {
+  if (localStorage.getItem("aai_user") && document.getElementById("new-user-form").style.display==="none") {
+    afterLogin(); return;
+  }
+  var name  = document.getElementById("inp-name").value.trim();
+  var phone = document.getElementById("inp-phone").value.trim();
+  var ok = true;
+  if (!name)                   { showE("err-name",true,"inp-name");  ok=false; } else showE("err-name",false,"inp-name");
+  if (!/^\d{10}$/.test(phone)) { showE("err-phone",true,"inp-phone"); ok=false; } else showE("err-phone",false,"inp-phone");
+  if (!ok) return;
+  S.name=name; S.phone=phone; saveUser(); afterLogin();
+}
+
+function afterLogin() {
+  document.getElementById("cat-greeting").textContent = "Hello, " + S.name.split(" ")[0] + "!";
+  goTo("screen-category");
+  updateCategoryScreen();
+}
+
+// ── SCREEN 2: CATEGORY ────────────────────────────────────────
+function catBack() {
+  if (S.cart.length === 0) goTo("screen-login");
+  else goTo("screen-category");
+}
+
+function updateCategoryScreen() {
+  var hasCart = S.cart.length > 0;
+  document.getElementById("cat-footer").style.display = hasCart ? "block" : "none";
+  var ind      = document.getElementById("cart-indicator");
+  var indItems = document.getElementById("cart-indicator-items");
+  if (hasCart) {
+    ind.classList.add("show");
+    var html = "";
+    S.cart.forEach(function(batch) {
+      batch.items.forEach(function(item) {
+        var dateStr = batch.isDaily
+          ? batch.startDate + " to " + batch.endDate + " (" + batch.activeDays + " days)"
+          : batch.deliveryDate;
+        html += '<div class="ci-item">' + item.emoji + " " + item.name + " " + item.qty + " " + item.unit + " — " + dateStr + "</div>";
+      });
+    });
+    indItems.innerHTML = html;
+  } else {
+    ind.classList.remove("show");
+  }
+}
+
+function selectCat(catId) {
+  S.currentCat = catId;
+  S.editingBatchIndex = -1;
+  excludedDates = [];
+  buildProductScreen(catId);
+  goTo("screen-products");
+}
+
+// ── SCREEN 3: PRODUCTS ────────────────────────────────────────
+function buildProductScreen(catId) {
+  var cat = CATALOGUE[catId];
+  document.getElementById("prod-title").textContent = cat.name;
+  document.getElementById("prod-icon").textContent  = cat.icon;
+  document.getElementById("prod-hname").textContent = cat.name;
+  document.getElementById("prod-hsub").textContent  = cat.isDaily
+    ? "Select items and duration"
+    : (cat.deliveryCharge > 0 ? "+Rs." + cat.deliveryCharge + " delivery for home delivery" : "No delivery charge");
+
+  var todayD = new Date();
+  var today  = todayD.getFullYear() + "-" + String(todayD.getMonth()+1).padStart(2,"0") + "-" + String(todayD.getDate()).padStart(2,"0");
+  var maxD   = new Date(todayD); maxD.setDate(todayD.getDate()+60);
+  var maxDate= maxD.getFullYear() + "-" + String(maxD.getMonth()+1).padStart(2,"0") + "-" + String(maxD.getDate()).padStart(2,"0");
+
+  if (cat.isDaily) {
+    document.getElementById("daily-duration-box").style.display = "block";
+    document.getElementById("single-date-box").style.display    = "none";
+    document.getElementById("inp-start").min = today;
+    document.getElementById("inp-start").max = maxDate;
+    document.getElementById("inp-end").min   = today;
+    document.getElementById("inp-end").max   = maxDate;
+    document.getElementById("inp-start").value = "";
+    document.getElementById("inp-end").value   = "";
+    document.getElementById("dur-summary").style.display = "none";
+    document.getElementById("skip-wrap").style.display   = "none";
+    document.getElementById("chip-wrap").innerHTML = "";
+    excludedDates = [];
+    document.getElementById("inp-start").onchange = buildChips;
+    document.getElementById("inp-end").onchange   = buildChips;
+  } else {
+    document.getElementById("daily-duration-box").style.display = "none";
+    document.getElementById("single-date-box").style.display    = "block";
+    document.getElementById("inp-single-date").min   = today;
+    document.getElementById("inp-single-date").max   = maxDate;
+    document.getElementById("inp-single-date").value = "";
+  }
+
+  var editBatch = S.editingBatchIndex >= 0 ? S.cart[S.editingBatchIndex] : null;
+
+  // Build product list — FIX #9: uses live CATALOGUE which may have fresh prices
+  var html = "";
+  cat.products.forEach(function(p) {
+    var sel = editBatch ? editBatch.items.some(function(i){return i.id===p.id;}) : false;
+    var qty = sel ? editBatch.items.find(function(i){return i.id===p.id;}).qty : p.def;
+    html += '<div class="product-card' + (sel ? " selected" : "") + '" id="pc-' + p.id + '">';
+    html += '<div class="product-top" onclick="toggleProd(\'' + p.id + '\')">';
+    html += '<div class="prod-emoji">' + p.emoji + '</div>';
+    html += '<div style="flex:1"><div class="prod-name">' + p.name + '</div>';
+    html += '<div class="prod-price">Rs.' + p.price + ' per ' + (p.unit==="pieces"?"piece":p.unit==="dozen"?"dozen":p.unit) + '</div></div>';
+    html += '<div class="prod-check"><span class="prod-check-icon">✓</span></div></div>';
+    html += '<div class="qty-section"><span style="font-size:13px;color:#ff66cc;font-weight:600;">Qty</span>';
+    html += '<div class="qty-stepper">';
+    html += '<button class="qty-btn" onclick="chQty(\'' + p.id + '\',' + (-p.step) + ')">−</button>';
+    html += '<input class="qty-val" type="number" id="qv-' + p.id + '" value="' + qty + '" min="' + p.min + '" step="' + p.step + '" oninput="updateStrip()" onchange="clamp(\'' + p.id + '\',' + p.min + ')">';
+    html += '<button class="qty-btn" onclick="chQty(\'' + p.id + '\',' + p.step + ')">+</button>';
+    html += '</div><span class="qty-unit">' + p.unit + '</span></div></div>';
+  });
+  document.getElementById("product-list").innerHTML = html;
+
+  if (editBatch) {
+    if (cat.isDaily) {
+      document.getElementById("inp-start").value = editBatch.startDate || "";
+      document.getElementById("inp-end").value   = editBatch.endDate   || "";
+      excludedDates = editBatch.excludedDates ? editBatch.excludedDates.slice() : [];
+      if (editBatch.startDate && editBatch.endDate) buildChips();
+    } else {
+      document.getElementById("inp-single-date").value = editBatch.deliveryDate || "";
+    }
+  }
+  updateStrip();
+}
+
+function toggleProd(id) {
+  document.getElementById("pc-" + id).classList.toggle("selected");
+  document.getElementById("err-products").classList.remove("show");
+  updateStrip();
+}
+
+function chQty(id, d) {
+  var inp = document.getElementById("qv-" + id);
+  var p   = CATALOGUE[S.currentCat].products.find(function(x){return x.id===id;});
+  var v   = Math.round((parseFloat(inp.value||p.min) + d) * 100) / 100;
+  if (v < p.min) v = p.min;
+  inp.value = v;
+  updateStrip();
+}
+
+function clamp(id, min) {
+  var inp = document.getElementById("qv-" + id);
+  if (!inp.value || parseFloat(inp.value) < min) inp.value = min;
+  updateStrip();
+}
+
+function getSelectedProducts() {
+  if (!S.currentCat) return [];
+  return CATALOGUE[S.currentCat].products.filter(function(p) {
+    var el = document.getElementById("pc-" + p.id);
+    return el && el.classList.contains("selected");
+  }).map(function(p) {
+    var qty = parseFloat(document.getElementById("qv-" + p.id).value) || p.min;
+    return Object.assign({}, p, {qty:qty, amount:Math.round(qty * p.price)});
+  });
+}
+
+function updateStrip() {
+  var items = getSelectedProducts();
+  var strip = document.getElementById("cart-strip");
+  if (!items.length) { strip.classList.remove("show"); return; }
+  strip.classList.add("show");
+  var total = items.reduce(function(s,i){return s+i.amount;},0);
+  document.getElementById("strip-items").textContent = items.length + (items.length===1?" item":" items") + " selected";
+  document.getElementById("strip-amt").textContent   = "Rs." + total;
+}
+
+// Date chips
+function buildChips() {
+  var start = document.getElementById("inp-start").value;
+  var end   = document.getElementById("inp-end").value;
+  if (!start||!end||end<start) {
+    document.getElementById("dur-summary").style.display="none";
+    document.getElementById("skip-wrap").style.display="none";
+    return;
+  }
+  var dates=[], cur=new Date(start+"T00:00:00"), endD=new Date(end+"T00:00:00");
+  while(cur<=endD){dates.push(new Date(cur));cur.setDate(cur.getDate()+1);}
+  document.getElementById("dur-summary").style.display="block";
+  document.getElementById("dur-summary").textContent = dates.length+" day"+(dates.length===1?"":"s")+" selected";
+  var days=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  var months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var html="";
+  dates.forEach(function(d){
+    var ds=d.toISOString().split("T")[0];
+    var label=days[d.getDay()]+" "+d.getDate()+" "+months[d.getMonth()];
+    var excl=excludedDates.indexOf(ds)>=0;
+    html+='<div class="date-chip'+(excl?" excluded":"")+'" id="chip-'+ds+'" data-ds="'+ds+'" onclick="toggleChip(this.dataset.ds)">'+label+'</div>';
+  });
+  document.getElementById("chip-wrap").innerHTML=html;
+  document.getElementById("skip-wrap").style.display="block";
+  updateSkipSummary(dates.length);
+}
+
+function toggleChip(ds) {
+  var idx=excludedDates.indexOf(ds);
+  if(idx>=0) excludedDates.splice(idx,1); else excludedDates.push(ds);
+  document.getElementById("chip-"+ds).classList.toggle("excluded", excludedDates.indexOf(ds)>=0);
+  var start=document.getElementById("inp-start").value, end=document.getElementById("inp-end").value;
+  var total=0, cur=new Date(start+"T00:00:00"), endD=new Date(end+"T00:00:00");
+  while(cur<=endD){total++;cur.setDate(cur.getDate()+1);}
+  updateSkipSummary(total);
+}
+
+function updateSkipSummary(total) {
+  var el=document.getElementById("skip-summary");
+  if(excludedDates.length>0){el.style.display="block";el.textContent=excludedDates.length+" day"+(excludedDates.length===1?"":"s")+" skipped — delivering on "+(total-excludedDates.length)+" days";}
+  else el.style.display="none";
+}
+
+function getActiveDates() {
+  var start=document.getElementById("inp-start").value, end=document.getElementById("inp-end").value;
+  if(!start||!end) return [];
+  var dates=[], cur=new Date(start+"T00:00:00"), endD=new Date(end+"T00:00:00");
+  while(cur<=endD){var ds=cur.toISOString().split("T")[0]; if(excludedDates.indexOf(ds)<0) dates.push(ds); cur.setDate(cur.getDate()+1);}
+  return dates;
+}
+
+// ── ADD BATCH TO CART ─────────────────────────────────────────
+function addBatchToCart() {
+  var items = getSelectedProducts();
+  if (!items.length) { document.getElementById("err-products").classList.add("show"); return; }
+  var cat   = CATALOGUE[S.currentCat];
+  var batch = {catId:S.currentCat, catName:cat.name, icon:cat.icon, isDaily:cat.isDaily, deliveryCharge:cat.deliveryCharge, items:items};
+
+  if (cat.isDaily) {
+    var start=document.getElementById("inp-start").value, end=document.getElementById("inp-end").value;
+    if (!start){showE("err-start",true,"inp-start");return;} showE("err-start",false,"inp-start");
+    if (!end||end<start){showE("err-end",true,"inp-end");return;} showE("err-end",false,"inp-end");
+    var activeDates    = getActiveDates();
+    batch.startDate    = start;
+    batch.endDate      = end;
+    batch.excludedDates= excludedDates.slice();
+    batch.activeDays   = activeDates.length;
+    batch.activeDates  = activeDates;
+    batch.deliveryDate = start;
+  } else {
+    var sd=document.getElementById("inp-single-date").value;
+    if (!sd){showE("err-single-date",true,"inp-single-date");return;} showE("err-single-date",false,"inp-single-date");
+    batch.deliveryDate = sd;
+  }
+
+  if (S.editingBatchIndex >= 0) {
+    S.cart[S.editingBatchIndex] = batch;
+    S.editingBatchIndex = -1;
+  } else {
+    S.cart.push(batch);
+  }
+  goTo("screen-category");
+  updateCategoryScreen();
+}
+
+// ── SCREEN 4: DELIVERY ────────────────────────────────────────
+function goToDelivery() {
+  if (S.cart.length === 0) return;
+  if (S.address)  document.getElementById("inp-address").value  = S.address;
+  if (S.landmark) document.getElementById("inp-landmark").value = S.landmark;
+  goTo("screen-delivery");
+}
+
+function setDelivery(t) {
+  S.delivType = t==="home" ? "Home Delivery" : "Pickup";
+  document.getElementById("opt-home").classList.toggle("active", t==="home");
+  document.getElementById("opt-pickup").classList.toggle("active", t!=="home");
+  var aw=document.getElementById("address-wrap");
+  if(t==="home") aw.classList.add("show"); else aw.classList.remove("show");
+}
+
+function goToBill() {
+  if (S.delivType==="Home Delivery") {
+    var addr=document.getElementById("inp-address").value.trim();
+    if (!addr){showE("err-address",true,"inp-address");return;} showE("err-address",false,"inp-address");
+    S.address=addr; S.landmark=document.getElementById("inp-landmark").value.trim(); saveUser();
+  }
+  S.note=document.getElementById("inp-note").value.trim();
+  buildBill();
+  goTo("screen-bill");
+}
+
+// ── SCREEN 5: BILL ────────────────────────────────────────────
+function buildBill() {
+  document.getElementById("bill-cname").textContent = S.name;
+  var addrLine = S.delivType==="Home Delivery"
+    ? "Home Delivery: " + S.address + (S.landmark ? " (Near " + S.landmark + ")" : "")
+    : "Pickup";
+  document.getElementById("bill-cinfo").innerHTML = "Phone: " + S.phone + "<br>" + addrLine + (S.note ? "<br>Note: " + S.note : "");
+
+  var dc=0, sub=0, itemsHtml="";
+
+  S.cart.forEach(function(batch, bIdx) {
+    var batchSub=0;
+    var days = batch.isDaily ? batch.activeDays : 1;
+    batch.items.forEach(function(item){batchSub += item.amount * days;});
+    sub += batchSub;
+
+    var batchDC = (S.delivType==="Home Delivery" && !batch.isDaily && batch.deliveryCharge>0) ? batch.deliveryCharge : 0;
+    dc += batchDC;
+
+    var dateStr = batch.isDaily
+      ? batch.startDate + " to " + batch.endDate + (batch.activeDays ? "  (" + batch.activeDays + " days)" : "")
+      : batch.deliveryDate;
+
+    itemsHtml += '<div class="bill-group">';
+    itemsHtml += '<div class="bill-group-header"><span class="bill-group-cat">' + batch.icon + " " + batch.catName + '</span><span class="bill-group-dates">' + dateStr + '</span></div>';
+
+    batch.items.forEach(function(item) {
+      var lineAmt = item.amount * days;
+      var qtyStr  = batch.isDaily ? item.qty + " " + item.unit + "/day x " + days + " days" : item.qty + " " + item.unit;
+      itemsHtml += '<div class="bill-item-row">';
+      itemsHtml += '<div class="bill-item-left"><div class="bill-item-name">' + item.emoji + " " + item.name + '</div>';
+      itemsHtml += '<div class="bill-item-qty">' + qtyStr + ' x Rs.' + item.price + '</div></div>';
+      itemsHtml += '<div class="bill-item-price">Rs.' + lineAmt + '</div>';
+      itemsHtml += '<button class="edit-btn" title="Edit" onclick="editBatch(' + bIdx + ')">✏</button>';
+      itemsHtml += '<button class="edit-btn" style="margin-left:4px;color:#ff6666;border-color:rgba(255,100,100,0.3);" title="Remove" onclick="removeItem(' + bIdx + ',\'' + item.id + '\')">🗑</button>';
+      itemsHtml += '</div>';
+    });
+    itemsHtml += '</div>';
+  });
+
+  document.getElementById("bill-items-container").innerHTML = itemsHtml;
+  document.getElementById("bill-sub").textContent   = "Rs." + sub;
+  document.getElementById("bill-total").textContent = "Rs." + (sub + dc);
+  var dr=document.getElementById("bill-drow");
+  if(dc>0){dr.style.display="flex";document.getElementById("bill-damt").textContent="Rs."+dc;}
+  else dr.style.display="none";
+  document.getElementById("bill-header-sub").textContent = S.cart.length===1 ? "Order Summary" : S.cart.length + " categories ordered";
+}
+
+function editBatch(bIdx) {
+  S.editingBatchIndex = bIdx;
+  var batch = S.cart[bIdx];
+  S.currentCat = batch.catId;
+  excludedDates = batch.excludedDates ? batch.excludedDates.slice() : [];
+  buildProductScreen(batch.catId);
+  goTo("screen-products");
+}
+
+// ── CONFIRM ORDER ─────────────────────────────────────────────
+function confirmOrder() {
+  var btn=document.getElementById("confirm-btn");
+  btn.classList.add("loading"); btn.disabled=true;
+  document.getElementById("err-banner").style.display="none";
+
+  var allOrders=[];
+
+  S.cart.forEach(function(batch) {
+    var dc   = (S.delivType==="Home Delivery" && !batch.isDaily && batch.deliveryCharge>0) ? batch.deliveryCharge : 0;
+    var days = batch.isDaily ? batch.activeDays : 1;
+    var batchTotal = batch.items.reduce(function(s,i){return s+i.amount*days;},0) + dc;
+    var itemsClean = batch.items.map(function(i){return {name:i.name,qty:i.qty,unit:i.unit,price:i.price,amount:i.amount,emoji:i.emoji};});
+
+    if (batch.isDaily && batch.activeDates) {
+      batch.activeDates.forEach(function(date, di) {
+        var dayTotal = batch.items.reduce(function(s,i){return s+i.amount;},0);
+        allOrders.push({
+          action:"newOrder",
+          name:S.name, phone:S.phone,
+          category:batch.catName,
+          deliveryDate:date,
+          deliveryType:S.delivType,
+          address:S.address, landmark:S.landmark, note:S.note,
+          items:itemsClean,
+          subtotal:dayTotal, deliveryCharge:0, total:dayTotal,
+          isDailySubscription:true, dayNumber:di+1, totalDays:batch.activeDays,
+          startDate:batch.startDate, endDate:batch.endDate
+        });
+      });
+    } else {
+      allOrders.push({
+        action:"newOrder",
+        name:S.name, phone:S.phone,
+        category:batch.catName,
+        deliveryDate:batch.deliveryDate,
+        deliveryType:S.delivType,
+        address:S.address, landmark:S.landmark, note:S.note,
+        items:itemsClean,
+        subtotal:batchTotal-dc, deliveryCharge:dc, total:batchTotal
+      });
+    }
+  });
+
+  // FIX #1: Removed mode:"no-cors" so we can read the real response
+  // Apps Script returns orderId in JSON — we now display the real one
+  fetch(SCRIPT_URL, {
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify({action:"batchOrders", orders:allOrders})
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(result) {
+    var oid = (result && result.orderId) ? result.orderId : ("ORD-" + Date.now().toString().slice(-6));
+    document.getElementById("success-oid").textContent = oid;
+    S.cart=[]; S.note=""; S.editingBatchIndex=-1;
+    goTo("screen-success");
+  })
+  .catch(function() {
+    document.getElementById("err-banner").style.display="block";
+  })
+  .finally(function() {
+    btn.classList.remove("loading"); btn.disabled=false;
+  });
+}
+
+function placeAnother() {
+  S.cart=[]; S.delivType="Home Delivery"; S.note=""; S.editingBatchIndex=-1;
+  document.querySelectorAll(".product-card").forEach(function(c){c.classList.remove("selected");});
+  updateCategoryScreen();
+  goTo("screen-category");
+}
+
+function removeItem(bIdx, itemId) {
+  var batch = S.cart[bIdx];
+  if (!batch) return;
+  batch.items = batch.items.filter(function(i){ return i.id !== itemId; });
+  if (batch.items.length === 0) {
+    S.cart.splice(bIdx, 1);
+    if (S.cart.length === 0) { goTo("screen-category"); updateCategoryScreen(); return; }
+  }
+  buildBill();
+}
+
+function showE(eid, show, iid) {
+  document.getElementById(eid).classList.toggle("show", show);
+  if (iid) document.getElementById(iid).classList.toggle("err", show);
+}
+
+function tilt(e,card){var r=card.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;card.style.transform="rotateY("+(x/r.width-0.5)*20+"deg) rotateX("+(y/r.height-0.5)*-20+"deg) scale(1.02)";}
+function untilt(card){card.style.transform="";}
+
+window.onload = function() {
+  loadUser();
+  // FIX #9: Load live prices from sheet in background
+  loadProductsFromSheet();
+};
+</script>
+</body>
+</html>
