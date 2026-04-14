@@ -251,10 +251,17 @@ body{background:radial-gradient(circle at top,#0a1a0a,#050d05);color:white;min-h
     </div>
     <div id="new-user-form">
       <div class="section-title">Personal Details</div>
-      <div class="field">
-        <label>Your Name <span class="req">*</span></label>
-        <input type="text" id="inp-name" placeholder="Enter your full name" autocomplete="name"/>
-        <div class="err-msg" id="err-name">Please enter your name</div>
+      <div class="field-row">
+        <div class="field">
+          <label>First Name <span class="req">*</span></label>
+          <input type="text" id="inp-firstname" placeholder="e.g. Mihir" autocomplete="given-name"/>
+          <div class="err-msg" id="err-firstname">Required</div>
+        </div>
+        <div class="field">
+          <label>Last Name <span class="req">*</span></label>
+          <input type="text" id="inp-lastname" placeholder="e.g. Atre" autocomplete="family-name"/>
+          <div class="err-msg" id="err-lastname">Required</div>
+        </div>
       </div>
       <div class="field">
         <label>WhatsApp Number <span class="req">*</span></label>
@@ -571,7 +578,8 @@ var CATALOGUE = {
 
 // ── STATE ─────────────────────────────────────────────────────
 var S = {
-  name:"", phone:"",
+  firstName:"", lastName:"", name:"",
+  phone:"",
   building:"", road:"", area:"", pincode:"", landmark:"",
   delivType:"Home Delivery", note:"",
   currentCat:null, cart:[], editingBatchIndex:-1,
@@ -591,21 +599,55 @@ function getDistanceMeters(lat1, lon1, lat2, lon2) {
 }
 
 // ── GEOCODE ADDRESS via Google Maps API ───────────────────────
-function checkDeliveryCharge(address, callback) {
-  var encoded = encodeURIComponent(address + ", Dombivli, Maharashtra");
-  var url = "https://maps.googleapis.com/maps/api/geocode/json?address="+encoded+"&key="+MAPS_API_KEY;
-  fetch(url)
+// ── SECRET CODE CHECK ────────────────────────────────────────
+// Generates code from firstName_lastName_123
+// Checks against free delivery list fetched from Google Sheet
+var FREE_DELIVERY_CODES = []; // loaded from sheet on init
+
+function generateCode(firstName, lastName) {
+  return firstName.trim() + "_" + lastName.trim() + "_123";
+}
+
+function checkDeliveryCharge(firstName, lastName, callback) {
+  var code = generateCode(firstName, lastName);
+  console.log("Checking code:", code);
+  // Check against loaded list
+  if(FREE_DELIVERY_CODES.length > 0) {
+    var isFree = FREE_DELIVERY_CODES.some(function(c){
+      return c.trim().toLowerCase() === code.toLowerCase();
+    });
+    console.log("Code found in list:", isFree);
+    callback(isFree);
+    return;
+  }
+  // List not loaded yet — fetch from sheet
+  fetchFreeDeliveryCodes(function(){
+    var isFree = FREE_DELIVERY_CODES.some(function(c){
+      return c.trim().toLowerCase() === code.toLowerCase();
+    });
+    console.log("Code found after fetch:", isFree);
+    callback(isFree);
+  });
+}
+
+function fetchFreeDeliveryCodes(callback) {
+  if(!SCRIPT_URL || SCRIPT_URL === "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE"){
+    if(callback) callback();
+    return;
+  }
+  fetch(SCRIPT_URL + "?action=getFreeDeliveryCodes")
     .then(function(r){return r.json();})
     .then(function(data){
-      if(data.status==="OK" && data.results && data.results.length>0){
-        var loc = data.results[0].geometry.location;
-        var dist = getDistanceMeters(HOME_LAT, HOME_LNG, loc.lat, loc.lng);
-        callback(dist <= FREE_RADIUS, Math.round(dist));
-      } else {
-        callback(false, -1); // geocode failed — default to paid
+      if(data.codes && Array.isArray(data.codes)){
+        FREE_DELIVERY_CODES = data.codes;
+        console.log("Loaded", FREE_DELIVERY_CODES.length, "free delivery codes");
       }
+      if(callback) callback();
     })
-    .catch(function(){callback(false,-1);});
+    .catch(function(err){
+      console.log("Could not fetch free delivery codes:", err);
+      if(callback) callback();
+    });
 }
 
 // ── LOCAL STORAGE ─────────────────────────────────────────────
@@ -613,7 +655,9 @@ function loadUser() {
   try {
     var u = JSON.parse(localStorage.getItem("annabrahma_user")||"null");
     if(!u||!u.name||!u.phone) return;
-    S.name=u.name; S.phone=u.phone;
+    S.firstName=u.firstName||""; S.lastName=u.lastName||"";
+    S.name=(u.firstName+" "+u.lastName).trim()||u.name||"";
+    S.phone=u.phone;
     S.building=u.building||""; S.road=u.road||"";
     S.area=u.area||""; S.pincode=u.pincode||"";
     S.landmark=u.landmark||"";
@@ -622,13 +666,13 @@ function loadUser() {
 
     document.getElementById("wb-banner").classList.add("show");
     document.getElementById("wb-avatar").textContent=u.name.charAt(0).toUpperCase();
-    document.getElementById("wb-name").textContent="पुन्हा स्वागत, "+u.name.split(" ")[0]+"!";
+    document.getElementById("wb-name").textContent="पुन्हा स्वागत, "+u.firstName+"!";
     document.getElementById("wb-sub").textContent=u.phone+" • "+(u.building||u.area||"");
     document.getElementById("new-user-form").style.display="none";
 
     // Show saved delivery status
     if(S.deliveryCheckDone){
-      showDeliveryBadge(S.isFreeDelivery, -1, true);
+      showDeliveryBadge(S.isFreeDelivery, true);
     }
   } catch(e){}
 }
@@ -636,6 +680,7 @@ function loadUser() {
 function saveUser() {
   try {
     localStorage.setItem("annabrahma_user", JSON.stringify({
+      firstName:S.firstName, lastName:S.lastName,
       name:S.name, phone:S.phone,
       building:S.building, road:S.road,
       area:S.area, pincode:S.pincode, landmark:S.landmark,
@@ -651,21 +696,21 @@ function clearSaved() {
   document.getElementById("wb-banner").classList.remove("show");
   document.getElementById("new-user-form").style.display="block";
   document.getElementById("delivery-status-badge").style.display="none";
-  ["inp-name","inp-phone","inp-building","inp-road","inp-area","inp-pincode","inp-landmark-login"].forEach(function(id){
+  ["inp-firstname","inp-lastname","inp-phone","inp-building","inp-road","inp-area","inp-pincode","inp-landmark-login"].forEach(function(id){
     document.getElementById(id).value="";
   });
 }
 
-function showDeliveryBadge(isFree, dist, savedOnly) {
+function showDeliveryBadge(isFree, savedOnly) {
   var badge = document.getElementById("delivery-status-badge");
   var icon  = document.getElementById("delivery-status-icon");
   var text  = document.getElementById("delivery-status-text");
   badge.className = "delivery-status " + (isFree ? "free" : "paid");
   icon.textContent = isFree ? "🎉" : "🛵";
   if(isFree){
-    text.textContent = savedOnly ? "Free delivery for your area!" : "Great! Free delivery for you (within "+FREE_RADIUS+"m)";
+    text.textContent = "🎉 Free delivery applied for your address!";
   } else {
-    text.textContent = savedOnly ? "Delivery charge: Rs."+DELIVERY_CHARGE : "Delivery charge: Rs."+DELIVERY_CHARGE+" ("+dist+"m from us)";
+    text.textContent = "Delivery charge: Rs."+DELIVERY_CHARGE+" will be applicable";
   }
 }
 
@@ -678,12 +723,20 @@ function goTo(id) {
 
 // ── LOGIN ─────────────────────────────────────────────────────
 function loginContinue() {
-  // Returning user
+  // Returning user — skip validation, go straight in
   if(localStorage.getItem("annabrahma_user") && document.getElementById("new-user-form").style.display==="none"){
-    afterLogin(); return;
+    // Re-check free delivery in case list changed
+    checkDeliveryCharge(S.firstName, S.lastName, function(isFree){
+      S.isFreeDelivery = isFree;
+      S.deliveryCheckDone = true;
+      saveUser();
+      afterLogin();
+    });
+    return;
   }
   // New user validation
-  var name     = document.getElementById("inp-name").value.trim();
+  var firstName= document.getElementById("inp-firstname").value.trim();
+  var lastName = document.getElementById("inp-lastname").value.trim();
   var phone    = document.getElementById("inp-phone").value.trim();
   var building = document.getElementById("inp-building").value.trim();
   var road     = document.getElementById("inp-road").value.trim();
@@ -691,7 +744,8 @@ function loginContinue() {
   var pincode  = document.getElementById("inp-pincode").value.trim();
   var landmark = document.getElementById("inp-landmark-login").value.trim();
   var ok=true;
-  if(!name){showE("err-name",true,"inp-name");ok=false;}else showE("err-name",false,"inp-name");
+  if(!firstName){showE("err-firstname",true,"inp-firstname");ok=false;}else showE("err-firstname",false,"inp-firstname");
+  if(!lastName){showE("err-lastname",true,"inp-lastname");ok=false;}else showE("err-lastname",false,"inp-lastname");
   if(!/^\d{10}$/.test(phone)){showE("err-phone",true,"inp-phone");ok=false;}else showE("err-phone",false,"inp-phone");
   if(!building){showE("err-building",true,"inp-building");ok=false;}else showE("err-building",false,"inp-building");
   if(!road){showE("err-road",true,"inp-road");ok=false;}else showE("err-road",false,"inp-road");
@@ -699,7 +753,9 @@ function loginContinue() {
   if(!pincode||pincode.length<6){showE("err-pincode",true,"inp-pincode");ok=false;}else showE("err-pincode",false,"inp-pincode");
   if(!ok) return;
 
-  S.name=name; S.phone=phone; S.building=building;
+  S.firstName=firstName; S.lastName=lastName;
+  S.name=firstName+" "+lastName;
+  S.phone=phone; S.building=building;
   S.road=road; S.area=area; S.pincode=pincode; S.landmark=landmark;
 
   // Check delivery charge via Geocoding
@@ -709,11 +765,10 @@ function loginContinue() {
   document.getElementById("delivery-status-icon").textContent="📍";
   document.getElementById("delivery-status-text").textContent="Checking delivery charge for your area...";
 
-  var fullAddress = building+", "+road+", "+area+", "+pincode;
-  checkDeliveryCharge(fullAddress, function(isFree, dist){
+  checkDeliveryCharge(firstName, lastName, function(isFree){
     S.isFreeDelivery = isFree;
     S.deliveryCheckDone = true;
-    showDeliveryBadge(isFree, dist, false);
+    showDeliveryBadge(isFree, false);
     saveUser();
     setTimeout(function(){ afterLogin(); }, 1200);
   });
@@ -1064,7 +1119,10 @@ function showE(eid,show,iid){
   if(iid)document.getElementById(iid).classList.toggle("err",show);
 }
 
-window.onload=function(){ loadUser(); };
+window.onload=function(){
+  loadUser();
+  fetchFreeDeliveryCodes(null); // preload in background
+};
 </script>
 </body>
 </html>
